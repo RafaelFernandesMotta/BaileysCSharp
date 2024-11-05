@@ -485,6 +485,41 @@ namespace BaileysCSharp.Core
 
         }
 
+        #region Logout
+        public async Task Logout(string tag)
+        {
+            var jid = Creds != null ? Creds.Me.GetID() : string.Empty;
+
+            if (!string.IsNullOrEmpty(jid))
+            {
+                var iq = new BinaryNode("iq")
+                {
+                    attrs = new Dictionary<string, string>()
+                    {
+                        {"to",Constants.S_WHATSAPP_NET },
+                        {"xmlns" ,"md" },
+                        {"type","set" },
+                        {"id", GenerateMessageTag() }
+                    },
+                    content = new BinaryNode[]
+                    {
+                        new BinaryNode(tag)
+                        {
+                            attrs = new Dictionary<string, string>()
+                            {
+                                { "jid", jid },
+                                { "reason" , "user_initiated" }
+                            }
+                        },
+                    }
+                };
+
+                await Query(iq);
+                End(new Boom("Logout", DisconnectReason.LoggedOut));
+            }
+        }
+        #endregion
+
         private async Task UploadPreKeysToServerIfRequired()
         {
             var preKeyCount = await GetAvailablePreKeysOnServer();
